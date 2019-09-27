@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 plt.rc("text", usetex=True)
 plt.rc("font", family="serif")
 
-import IPython.display as ipd
+# import IPython.display as ipd
 
 
 DEFAULT_CMAP = cm.magma
@@ -202,15 +202,16 @@ class Subbands(Representation):
 
         for i in range(n_channels):
             curr_subband = subbands[i]
-            Waveform(curr_subband).display(axes[i])
-            axes[i].set_title("")
-            axes[i].set_xlabel("")
-            axes[i].set_ylabel("Chan. {:d}\nCF: {:.0f} Hz".format(i + 1, CFs[i]))
+            ax_idx = list(reversed(range(n_channels)))[i]
+            Waveform(curr_subband).display(axes[ax_idx])
+            axes[ax_idx].set_title("")
+            axes[ax_idx].set_xlabel("")
+            axes[ax_idx].set_ylabel("Chan. {:d}\nCF: {:.0f} Hz".format(i + 1, CFs[i]))
             if i != n_channels - 1:
-                axes[i].set_xticklabels([])
-            axes[i].set_yticklabels([])
+                axes[ax_idx].set_xticklabels([])
+            axes[ax_idx].set_yticklabels([])
         axes[0].set_title("Subbands")
-        axes[i].set_xlabel("Time [s]")
+        axes[ax_idx].set_xlabel("Time [s]")
 
 
 
@@ -548,6 +549,7 @@ class ModulationSpectrum(Representation):
 
 
 class InterauralCues(Representation):
+    # TODO: Implement interaural correlogram
     def __init__(self, binaural_sound, win_dur, win_overlap=0.5,
                  suppression_threshold_fraction=0.01):
         self.sound = binaural_sound

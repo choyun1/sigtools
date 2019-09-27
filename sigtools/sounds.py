@@ -84,6 +84,29 @@ class Sound:
     def __rtruediv__(self, other):
         return self.__truediv__(other)
 
+    def __getitem__(self, t_slice):
+        # Convert given key into samples
+        self_data = self.data
+        self_fs = self.fs
+
+        if t_slice.start:
+            sample_start = floor(self_fs*t_slice.start)
+        else:
+            sample_start = t_slice.start
+
+        if t_slice.stop:
+            sample_stop = floor(self_fs*t_slice.stop)
+        else:
+            sample_stop = t_slice.stop
+
+        if t_slice.step:
+            sample_step = floor(self_fs*t_slice.step)
+        else:
+            sample_step = t_slice.step
+
+        sample_slice = slice(sample_start, sample_stop, sample_step)
+        return Sound(self_data[sample_slice], self_fs)
+
     def make_binaural(self):
         if len(self.data.shape) == 2:
             raise RuntimeError("sound is already binaural")
@@ -163,13 +186,15 @@ class HarmonicComplex(Periodic):
     def __init__(self, sig_dur, fs, f0, harmonics, amplitudes, phases):
         sig_len = floor(fs*sig_dur)
         f_nyq = fs/2
-        harmonics = harmonics.astype(int) # force integer harmonics
+        n_components = len(harmonics)
         f = harmonics*f0
         f = f[np.where(f < f_nyq)[0]]
-        sound_sum = Silence(1, 1)
-        for i in range(len(harmonics)):
-            curr_sound = amplitudes[i]*PureTone(sig_dur, fs, f[i], phases[i])
-            sound_sum = sum([sound_sum, curr_sound])
+        # NOTE: I had to specifically place the amplitudes after the PureTone
+        # Something funky is going on with the multiplication where the indexing
+        # for amplitudes array is behaving as if it were the sound object.
+        # To recreate the error, place amplitudes[i] BEFORE the PureTone.
+        sound_sum = sum([PureTone(sig_dur, fs, f[i], phases[i])*amplitudes[i]
+                         for i in range(n_components)])
         harm_complex_data = sound_sum.data
         rms_val = RMS(harm_complex_data)
         Periodic.__init__(self, harm_complex_data/rms_val, fs, f0, phases)
@@ -256,9 +281,19 @@ class GaussianNoise(Noise):
         self.f_hi = f_hi
 
 
-class TORC(Noise):
-    def __init__(self):
-        raise NotImplementedError
+class IteratedRippleNoise(Noise):
+    def __init__(self, sig_dur, fs, delay, gain, iterations):
+        from sigtools.processing import concat_sounds
+        seed_noise = GaussianNoise(sig_dur, fs)
+        delay_sound = Silence(delay, fs)
+        ripple_noise = seed_noise
+        curr_iteration = 0
+        while curr_iteration < iterations:
+            original_noise = concat_sounds([ripple_noise, delay_sound])
+            delayed_noise = gain*concat_sounds([delay_sound, ripple_noise])
+            ripple_noise = original_noise + delayed_noise
+            curr_iteration += 1
+        Noise.__init__(self, ripple_noise.data, fs)
 
 
 class CorrelatedNoise(Noise):
@@ -287,7 +322,8 @@ class SynthIR(ImpulseResponse):
                  fs, f_lo=0, f_hi=44100,
                  n_channels=16, env_type="exponential"):
         from sigtools.representations import Subbands, ModifiedSubbands
-        model_dir = "../reverb_data/"
+
+        model_dir = "/home/acho/Sync/Python/sigtools/reverb_data/"
         model_DRR   = np.load(model_dir + "fit_DRR.npy")
         model_RT60  = np.load(model_dir + "fit_RT60.npy")
         model_freqs = np.load(model_dir + "fit_freqs.npy")

@@ -17,6 +17,7 @@ from numpy import pi, sin, cos, tan, arctan, arctan2
 from numpy.fft import irfft
 from scipy.spatial import Delaunay
 from scipy.signal import resample
+from scipy.signal import convolve as sp_convolve
 
 from sigtools.utils import *
 from sigtools.sounds import *
@@ -64,7 +65,7 @@ def tuple_to_array(seq_of_coord_tuples):
     return np.array(list(zip(*seq_of_coord_tuples))).T
 
 
-def make_linear_trajectory(beg_pt, end_pt, n_spatial_samples, v_t=lambda t: t):
+def make_linear_trajectory(beg_pt, end_pt, n_spatial_samples):
     ndim = len(beg_pt)
     return np.array([np.linspace(beg_pt[dim_i],
                                  end_pt[dim_i],
@@ -72,9 +73,8 @@ def make_linear_trajectory(beg_pt, end_pt, n_spatial_samples, v_t=lambda t: t):
                      for dim_i in range(ndim)]).T
 
 
-def make_hcc_circular_trajectory(beg_pt, end_pt, n_spatial_samples, v_t=lambda t: t):
+def make_hcc_circular_trajectory(beg_pt, end_pt, n_spatial_samples):
     ndim = len(beg_pt)
-
     hcc_coords = np.array([np.linspace(beg_pt[dim_i],
                                        end_pt[dim_i],
                                        n_spatial_samples)
