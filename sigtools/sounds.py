@@ -39,7 +39,7 @@ class Sound:
             new_data = self.data + other.data
             return Sound(new_data, self.fs)
         elif isinstance(other, int) or isinstance(other, float):
-            return Sound(10**(other/20)*self.data, self.fs)
+            return Sound(10**(other/10)*self.data, self.fs)
         else:
             raise RuntimeError("invalid addend for Sound; must be a Sound object or a real number")
 
