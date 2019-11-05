@@ -8,8 +8,10 @@
 @email:  aycho@g.harvard.edu
 --------------------------
 """
-
 import warnings
+
+import sounddevice as sd
+import soundfile as sf
 
 from math import ceil, floor
 import numpy as np
@@ -17,8 +19,6 @@ from numpy import pi, sin, cos, tan, arctan
 from numpy.fft import rfft, irfft
 from scipy.signal import hilbert, resample
 from scipy.signal import convolve as sp_convolve
-from scipy.io.wavfile import  read as wavread
-from scipy.io.wavfile import write as wavwrite
 
 from sigtools.utils import *
 
@@ -107,6 +107,9 @@ class Sound:
         sample_slice = slice(sample_start, sample_stop, sample_step)
         return Sound(self_data[sample_slice], self_fs)
 
+    def play(self, *args, **kwargs):
+        sd.play(self.data, self.fs, *args, **kwargs)
+
     def make_binaural(self):
         if len(self.data.shape) == 2:
             raise RuntimeError("sound is already binaural")
@@ -125,8 +128,7 @@ class Sound:
         return Sound(new_data, self.fs)
 
     def save(self, path):
-        max = np.max(np.abs(self.data))
-        wavwrite(path, self.fs, self.data/max)
+        sf.write(path, self.fs, self.data/max)
 
     def extract_envelope(self):
         data = self.data
@@ -462,10 +464,8 @@ class HRIR(ImpulseResponse):
 
 class SoundLoader(Sound):
     def __init__(self, path):
-        fs, y = wavread(path)
-        y = y.astype(np.float32)
-        rms_val = RMS(y)
-        Sound.__init__(self, y/rms_val, fs)
+        y, fs = sf.read(path)
+        Sound.__init__(self, y, fs)
 
 
 class Silence(Sound):
