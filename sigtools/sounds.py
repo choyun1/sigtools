@@ -325,10 +325,9 @@ class SynthIR(ImpulseResponse):
                  n_channels=16, env_type="exponential"):
         from sigtools.representations import Subbands, ModifiedSubbands
 
-        model_dir = "/home/acho/Sync/Python/sigtools/reverb_data/"
-        model_DRR   = np.load(model_dir + "fit_DRR.npy")
-        model_RT60  = np.load(model_dir + "fit_RT60.npy")
-        model_freqs = np.load(model_dir + "fit_freqs.npy")
+        model_DRR   = np.load(os.path.join("reverb_data", "fit_DRR.npy"))
+        model_RT60  = np.load(os.path.join("reverb_data", "fit_RT60.npy"))
+        model_freqs = np.load(os.path.join("reverb_data", "fit_freqs.npy"))
 
         # Compute the frequencies over which synth parameters will be computed
         ERB_lo = freq_to_ERB(f_lo)
