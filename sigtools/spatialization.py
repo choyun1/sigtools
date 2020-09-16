@@ -9,15 +9,12 @@
 --------------------------
 """
 
-from tqdm import tqdm
-
 from math import ceil, floor
 import numpy as np
 from numpy import pi, sin, cos, tan, arctan, arctan2
 from numpy.fft import irfft
 from scipy.spatial import Delaunay
-from scipy.signal import resample
-from scipy.signal import convolve as sp_convolve
+from scipy.signal import resample, fftconvolve
 
 from sigtools.utils import *
 from sigtools.sounds import *
@@ -154,24 +151,22 @@ PKU_IOA_DATABASE = PKU_IOA_HRIR()
 
 
 def move_sound(trajectory, sound):
-    n_spatial_samples = trajectory.shape[0]
     data = sound.data
     fs = sound.fs
-    all_HRIRs = PKU_IOA_DATABASE.compute_HRIRs(trajectory, fs)
-
+    n_spatial_samples = len(trajectory)
     sig_len = len(sound)
-    block_size = floor(sig_len/n_spatial_samples)
-    moving_sound_data = np.zeros( (sig_len + len(all_HRIRs[0]) - 1, 2) )
-    # for i in tqdm(range(n_spatial_samples)):
-    for i in range(n_spatial_samples):
-        curr_beg_idx = i*block_size
-        curr_end_idx = (i + 1)*block_size
+    all_HRIRs = PKU_IOA_DATABASE.compute_HRIRs(trajectory, fs)
+    HRIR_len = len(all_HRIRs[0].data)
 
-        curr_HRIR_data = all_HRIRs[i].data
-        curr_block = np.zeros((sig_len, 2))
-        curr_block[curr_beg_idx:curr_end_idx] = data[curr_beg_idx:curr_end_idx]
-        moving_sound_data += np.array([sp_convolve(curr_HRIR_data[:, j],
-                                                   curr_block[:, j])
-                                       for j in range(2)]).T
+    block_size = 100*floor(sig_len/n_spatial_samples)
+    moving_sound_data = np.zeros((sig_len + HRIR_len - 1, 2))
+    for i in range(n_spatial_samples):
+        curr_data_beg_idx = round(i*sig_len/n_spatial_samples)
+        curr_data_end_idx = curr_data_beg_idx + block_size
+        curr_HRIR = all_HRIRs[i].data
+        curr_data = data[curr_data_beg_idx:curr_data_end_idx]
+        convolved = fftconvolve(curr_HRIR, curr_data, axes=0)
+        moving_sound_data[curr_data_beg_idx:curr_data_beg_idx + len(convolved)]\
+            += convolved
     rms_val = RMS(moving_sound_data)
     return Sound(moving_sound_data/rms_val, fs)

@@ -46,7 +46,7 @@ class AudioControl(Representation):
         sound = self.sound
         data = sound.data
         fs = sound.fs
-        ipd.display(ipd.Audio(data=data.T, rate=fs))
+        # ipd.display(ipd.Audio(data=data.T, rate=fs))
 
 
 class Waveform(Representation):

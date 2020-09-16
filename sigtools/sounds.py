@@ -11,15 +11,14 @@
 import os
 import warnings
 
-import sounddevice as sd
 import soundfile as sf
+import sounddevice as sd
 
 from math import ceil, floor
 import numpy as np
 from numpy import pi, sin, cos, tan, arctan
 from numpy.fft import rfft, irfft
-from scipy.signal import hilbert, resample
-from scipy.signal import convolve as sp_convolve
+from scipy.signal import hilbert, resample, fftconvolve
 
 from sigtools.utils import *
 
@@ -122,14 +121,11 @@ class Sound:
         self_data = self.data
         self_fs = self.fs
         other_data = other.data
-        if len(self.data.shape) == 1:
-            new_data = sp_convolve(self_data, other_data)
-        elif len(self.data.shape) == 2:
-            new_data = np.array( [sp_convolve(self_data[:, i], other_data[:, i]) for i in range(2)] ).T
-        return Sound(new_data, self.fs)
+        new_data = fftconvolve(self_data, other_data, axes=0)
+        return Sound(new_data, self_fs)
 
-    def save(self, path):
-        sf.write(path, self.fs, self.data/max)
+    def save(self, path, *args, **kwargs):
+        sf.write(path, self.data, self.fs, *args, **kwargs)
 
     def extract_envelope(self):
         data = self.data
