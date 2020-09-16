@@ -161,12 +161,11 @@ def move_sound(trajectory, sound):
     block_size = 100*floor(sig_len/n_spatial_samples)
     moving_sound_data = np.zeros((sig_len + HRIR_len - 1, 2))
     for i in range(n_spatial_samples):
-        curr_data_beg_idx = round(i*sig_len/n_spatial_samples)
-        curr_data_end_idx = curr_data_beg_idx + block_size
         curr_HRIR = all_HRIRs[i].data
-        curr_data = data[curr_data_beg_idx:curr_data_end_idx]
-        convolved = fftconvolve(curr_HRIR, curr_data, axes=0)
-        moving_sound_data[curr_data_beg_idx:curr_data_beg_idx + len(convolved)]\
-            += convolved
+        beg_idx = round(i*sig_len/n_spatial_samples)
+        curr_data = data[beg_idx:beg_idx + block_size]
+        convolved_data = fftconvolve(curr_HRIR, curr_data, axes=0)
+        moving_sound_data[beg_idx:beg_idx + len(convolved_data)]\
+            += convolved_data
     rms_val = RMS(moving_sound_data)
     return Sound(moving_sound_data/rms_val, fs)
