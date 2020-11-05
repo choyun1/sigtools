@@ -14,8 +14,10 @@ from abc import ABC, abstractmethod
 from math import ceil, floor
 import numpy as np
 from numpy import pi, cos
+# TODO: Change from numpy.fft over to scipy.fft
 from numpy.fft import rfft, irfft, rfftfreq, fft2
-from scipy.signal import hanning, correlate
+from scipy.fft import fft, ifft
+from scipy.signal import hanning, correlate, resample
 
 from sigtools.utils import *
 from sigtools.sounds import *
@@ -259,9 +261,13 @@ class MagnitudeSpectrum(Representation):
         return ModifiedMagSpectrum(spec_env, f)
 
     def to_Noise(self, sig_dur, fs):
-        M = self.extract_envelope()
-        spec_env = M.log_mag_spect
-        return GaussianNoise(sig_dur, fs, f_hi=fs, custom_spec_env=spec_env)
+        self_FFT = fft(self.data)
+        FFT_mag = np.abs(self_FFT)
+        resampled_mag = resample(FFT_mag, round(sig_dur*fs))
+        random_phases = 2*pi*(np.random.rand(len(resampled_mag)) - 0.5)
+        new_FFT = resampled_mag*np.exp(1j*random_phases)
+        new_data = np.real(ifft(new_FFT))
+        return Sound(new_data, fs)
 
     def display(self, ax, fscale="log"):
         log_mag_spectrum = self.log_mag_spect
