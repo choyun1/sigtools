@@ -232,6 +232,7 @@ class MagnitudeSpectrum(Representation):
         fs = sound.fs
         f_nyq = fs/2
         spec_len = len(sound)//2 + 1
+        self.fft = fft(data, axis=0)
         self.log_mag_spect = 10*np.log10(np.abs(rfft(data, axis=0)))
         self.f = np.linspace(0, f_nyq, spec_len)
 
@@ -252,17 +253,16 @@ class MagnitudeSpectrum(Representation):
         f_nyq = f[-1]
         n_samples = log_mag_spect.shape[0]
         sample_cutoff = floor(quefrency_cutoff*n_samples)
-        cepstrum = np.fft.fft(log_mag_spect)
+        cepstrum = fft(log_mag_spect)
         cepstrum_window = np.ones(log_mag_spect.shape)
         cepstrum_window[sample_cutoff:] = 0
         modified_cepstrum = cepstrum_window*cepstrum
-        spec_env = np.real(np.fft.ifft(modified_cepstrum))
+        spec_env = np.real(ifft(modified_cepstrum))
         spec_env -= np.max(spec_env)
         return ModifiedMagSpectrum(spec_env, f)
 
     def to_Noise(self, sig_dur, fs):
-        self_FFT = fft(self.data)
-        FFT_mag = np.abs(self_FFT)
+        FFT_mag = np.abs(self.fft)
         resampled_mag = resample(FFT_mag, round(sig_dur*fs))
         random_phases = 2*pi*(np.random.rand(len(resampled_mag)) - 0.5)
         new_FFT = resampled_mag*np.exp(1j*random_phases)
