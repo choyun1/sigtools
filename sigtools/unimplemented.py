@@ -10,6 +10,72 @@
 """
 
 
+# def calculate_moving_ITD_ILD(sound_file_name, n_channels=8, win_dur=500.e-3, ITD_thresh=1.5e-3):
+#     fs, data = wavfile.read(sound_file_name)
+#
+#     subbands = make_subbands(data, fs, n_channels=n_channels)
+#     n_channels = subbands.shape[0]
+#     sig_len = subbands.shape[1]
+#     win_len = int(fs*win_dur)
+#
+#     slice_begs = np.arange(0,       sig_len - win_len, int(0.5*win_len)).astype(int)
+#     slice_ends = np.arange(win_len, sig_len,           int(0.5*win_len)).astype(int)
+#     slices = [slice(*pair) for pair in zip(slice_begs, slice_ends)]
+#     n_windows = len(slices)
+#     window_func = hann(win_len)
+#
+#     t = np.linspace(0, sig_len/fs, n_windows)
+#     subbands_ITDs = np.empty((n_channels, n_windows))
+#     subbands_ILDs = np.empty((n_channels, n_windows))
+#     for i in range(n_channels):
+#         for j, data_slice in enumerate(slices):
+#             windowed_sig_L = window_func*subbands[i, data_slice, 0]
+#             windowed_sig_R = window_func*subbands[i, data_slice, 1]
+#
+#             ccf_windowed_sig = correlate(windowed_sig_L, windowed_sig_R)
+#             curr_win_ITD = (np.argmax(ccf_windowed_sig) - win_len)/win_len*win_dur
+#             if np.abs(curr_win_ITD) > ITD_thresh:
+#                 curr_win_ITD = 0
+#             subbands_ITDs[i, j] = curr_win_ITD
+#
+#             rms_L = np.sqrt(np.mean(np.power(windowed_sig_L, 2)))/win_len
+#             rms_R = np.sqrt(np.mean(np.power(windowed_sig_R, 2)))/win_len
+#             curr_win_ILD = 10*np.log10(rms_R/rms_L)
+#             subbands_ILDs[i, j] = curr_win_ILD
+#     return t, subbands_ITDs, subbands_ILDs
+#
+#
+# def make_binaural_plots(t, subbands_ITDs, subbands_ILDs):
+#     # Makes time-varying ITD and ILD plots
+#     # Needs the output from calculate_moving_ITD_ILD
+#     from matplotlib.colors import LinearSegmentedColormap
+#     cdict1 = {'red':   ((0.0, 0.0, 0.0),
+#                         (0.5, 0.0, 0.1),
+#                         (1.0, 1.0, 1.0)),
+#               'green': ((0.0, 0.0, 0.0),
+#                         (1.0, 0.0, 0.0)),
+#               'blue':  ((0.0, 0.0, 1.0),
+#                         (0.5, 0.1, 0.0),
+#                         (1.0, 0.0, 0.0))}
+#     blue_red1 = LinearSegmentedColormap('BlueRed1', cdict1)
+#
+#     n_channels = subbands_ITDs.shape[0]
+#
+#     fig, axes = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
+#     im0 = axes[0].imshow(ITDs, origin="lower", aspect="auto", extent=[np.min(t), np.max(t), 0, n_channels - 1],
+#                          interpolation="spline36", cmap=blue_red1)
+#     axes[0].set_ylabel("Frequency channel")
+#     axes[0].set_title("ITD map")
+#     fig.colorbar(im0, ax=axes[0])
+#
+#     im1 = axes[1].imshow(ILDs, origin="lower", aspect="auto", extent=[np.min(t), np.max(t), 0, n_channels - 1],
+#                          interpolation="spline36", cmap=blue_red1)
+#     axes[1].set_title("ILD map")
+#     axes[1].set_xlabel("Time [s]")
+#     axes[1].set_ylabel("Frequency channel")
+#     fig.colorbar(im1, ax=axes[1])
+#     plt.tight_layout()
+
 # def make_modulation_filterbank(f_c, f_lo, f_hi):
 #     """Filter coefficients from Dau et al., 1997"""
 #     # TODO

@@ -14,9 +14,8 @@ from abc import ABC, abstractmethod
 from math import ceil, floor
 import numpy as np
 from numpy import pi, cos
-# TODO: Change from numpy.fft over to scipy.fft
-from numpy.fft import rfft, irfft, rfftfreq, fft2
-from scipy.fft import fft, ifft
+from numpy.fft import fft, ifft, rfft, irfft, rfftfreq, fft2
+# from scipy.fft import fft, ifft
 from scipy.signal import hanning, correlate, resample
 
 from sigtools.utils import *
